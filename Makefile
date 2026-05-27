@@ -5,7 +5,10 @@ run:
 	uv run python main.py
 
 lint:
-	uv run ruff check main.py paas_web_app
+	uv run ruff check .
+
+test:
+	uv run pytest
 
 build:
 	uv build
