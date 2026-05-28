@@ -12,7 +12,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY paas_web_app ./paas_web_app
-COPY main.py ./
+COPY main.py README.md ./
 
 RUN uv sync --frozen --no-dev
 EXPOSE 8080
