@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ steps.python_version.outputs.version }}
+          python-version: .python-version
 
       - name: Cache dependencies
         uses: actions/cache@v4
