@@ -1,16 +1,17 @@
+UV ?= uv
 FRAMEWORK ?= flask
 
 install:
-	uv
+	$(UV) sync
 
 run:
-	uv run python main.py
+	$(UV) run python main.py
 
 lint:
-	uv run ruff check .
+	$(UV) run ruff check .
 
 test:
-	uv run pytest
+	$(UV) run pytest
 
 dev:
 	@if [ "$(FRAMEWORK)" != "flask" ]; then \
@@ -21,7 +22,7 @@ dev:
 	npm run dev
 
 build:
-	uv build
+	$(UV) build
 
 package-install: build
-	uv tool install --reinstall ./dist/devops_engineer_from_scratch_project_313-0.1.0-py3-none-any.whl
+	$(UV) tool install --reinstall ./dist/devops_engineer_from_scratch_project_313-0.1.0-py3-none-any.whl
