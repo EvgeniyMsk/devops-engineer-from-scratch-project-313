@@ -1,4 +1,5 @@
 import os
+import threading
 
 from flask import Flask, jsonify, request
 
@@ -35,22 +36,74 @@ def _to_read(link: Link, base_url: str) -> LinkRead:
 def create_app(*, database_url: str | None = None, base_url: str | None = None):
     load_dotenv()
 
-    sentry_dsn = os.getenv("SENTRY_DSN")
-    if sentry_dsn:
-        try:
-            import sentry_sdk
-
-            sentry_sdk.init(dsn=sentry_dsn, send_default_pii=True)
-        except ImportError:
-            pass
-
     app = Flask(__name__)
 
-    db_url = database_url or get_database_url()
-    engine = create_db_engine(db_url)
-    init_db(engine)
+    app.config["DATABASE_URL"] = database_url
+    app.config["BASE_URL"] = base_url
+    app.config["ENGINE"] = None
+    app.config["EFFECTIVE_BASE_URL"] = None
+    app.config["LIFESPAN_STARTED"] = False
+    _lifespan_lock = threading.Lock()
 
-    effective_base_url = (base_url or _base_url()).rstrip("/")
+    def _get_engine():
+        engine = app.config.get("ENGINE")
+        if engine is None:
+            raise RuntimeError("Database engine is not initialized")
+        return engine
+
+    def _get_effective_base_url() -> str:
+        base = app.config.get("EFFECTIVE_BASE_URL")
+        if not base:
+            raise RuntimeError("Base URL is not initialized")
+        return base
+
+    def _startup():
+        sentry_dsn = os.getenv("SENTRY_DSN")
+        if sentry_dsn:
+            try:
+                import sentry_sdk
+
+                sentry_sdk.init(dsn=sentry_dsn, send_default_pii=True)
+            except ImportError:
+                pass
+
+        db_url = app.config["DATABASE_URL"] or get_database_url()
+        engine = create_db_engine(db_url)
+        init_db(engine)
+        app.config["ENGINE"] = engine
+
+        effective_base_url = (app.config["BASE_URL"] or _base_url()).rstrip("/")
+        app.config["EFFECTIVE_BASE_URL"] = effective_base_url
+        app.config["LIFESPAN_STARTED"] = True
+
+    def _shutdown():
+        engine = app.config.get("ENGINE")
+        if engine is not None:
+            engine.dispose()
+        app.config["ENGINE"] = None
+        app.config["EFFECTIVE_BASE_URL"] = None
+        app.config["LIFESPAN_STARTED"] = False
+
+    def _ensure_started():
+        if app.config.get("LIFESPAN_STARTED"):
+            return
+        with _lifespan_lock:
+            if not app.config.get("LIFESPAN_STARTED"):
+                _startup()
+
+    @app.before_request
+    def _lifespan_before_request():
+        _ensure_started()
+
+    @app.teardown_appcontext
+    def _lifespan_teardown(_exc):
+        return None
+
+    app.extensions["lifespan"] = {
+        "startup": _startup,
+        "shutdown": _shutdown,
+        "ensure_started": _ensure_started,
+    }
 
     @app.errorhandler(404)
     def not_found(_err):
@@ -62,12 +115,16 @@ def create_app(*, database_url: str | None = None, base_url: str | None = None):
 
     @app.get("/api/links")
     def list_links():
+        engine = _get_engine()
+        effective_base_url = _get_effective_base_url()
         with Session(engine) as session:
             links = session.exec(select(Link).order_by(Link.id)).all()
             return jsonify([_to_read(l, effective_base_url).model_dump() for l in links])
 
     @app.post("/api/links")
     def create_link():
+        engine = _get_engine()
+        effective_base_url = _get_effective_base_url()
         payload = request.get_json(silent=True) or {}
         data = LinkCreate.model_validate(payload)
 
@@ -84,6 +141,8 @@ def create_app(*, database_url: str | None = None, base_url: str | None = None):
 
     @app.get("/api/links/<int:link_id>")
     def get_link(link_id: int):
+        engine = _get_engine()
+        effective_base_url = _get_effective_base_url()
         with Session(engine) as session:
             link = session.get(Link, link_id)
             if not link:
@@ -92,6 +151,8 @@ def create_app(*, database_url: str | None = None, base_url: str | None = None):
 
     @app.put("/api/links/<int:link_id>")
     def update_link(link_id: int):
+        engine = _get_engine()
+        effective_base_url = _get_effective_base_url()
         payload = request.get_json(silent=True) or {}
         data = LinkCreate.model_validate(payload)
 
@@ -113,6 +174,7 @@ def create_app(*, database_url: str | None = None, base_url: str | None = None):
 
     @app.delete("/api/links/<int:link_id>")
     def delete_link(link_id: int):
+        engine = _get_engine()
         with Session(engine) as session:
             link = session.get(Link, link_id)
             if not link:
@@ -126,10 +188,14 @@ def create_app(*, database_url: str | None = None, base_url: str | None = None):
 
 def run():
     app = create_app()
+    app.extensions["lifespan"]["startup"]()
     port_raw = os.getenv("PORT", "8080")
     try:
         port = int(port_raw)
     except ValueError:
         port = 8080
 
-    app.run(host="0.0.0.0", port=port)
+    try:
+        app.run(host="0.0.0.0", port=port)
+    finally:
+        app.extensions["lifespan"]["shutdown"]()
