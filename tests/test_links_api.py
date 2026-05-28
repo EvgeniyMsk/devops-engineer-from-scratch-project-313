@@ -11,15 +11,18 @@ def client():
 
 
 def test_links_crud_flow(client):
-    # list empty
-    response = client.get("/api/links")
+    response = client.get("/api/links?range=[0,10]")
     assert response.status_code == 200
     assert response.get_json() == []
+    assert response.headers["Accept-Ranges"] == "links"
+    assert response.headers["Content-Range"] == "links */0"
 
-    # create
     response = client.post(
         "/api/links",
-        json={"original_url": "https://example.com/long-url", "short_name": "exmpl"},
+        json={
+            "original_url": "https://example.com/long-url",
+            "short_name": "exmpl",
+        },
     )
     assert response.status_code == 201
     created = response.get_json()
@@ -30,20 +33,21 @@ def test_links_crud_flow(client):
 
     link_id = created["id"]
 
-    # list has one
-    response = client.get("/api/links")
+    response = client.get("/api/links?range=[0,10]")
     assert response.status_code == 200
     assert response.get_json() == [created]
+    assert response.headers["Content-Range"] == "links 0-0/1"
 
-    # get by id
     response = client.get(f"/api/links/{link_id}")
     assert response.status_code == 200
     assert response.get_json() == created
 
-    # update
     response = client.put(
         f"/api/links/{link_id}",
-        json={"original_url": "https://example.com/long-url2", "short_name": "exmpl2"},
+        json={
+            "original_url": "https://example.com/long-url2",
+            "short_name": "exmpl2",
+        },
     )
     assert response.status_code == 200
     updated = response.get_json()
@@ -52,15 +56,14 @@ def test_links_crud_flow(client):
     assert updated["short_name"] == "exmpl2"
     assert updated["short_url"] == "https://short.io/r/exmpl2"
 
-    # delete
     response = client.delete(f"/api/links/{link_id}")
     assert response.status_code == 204
     assert response.data in (b"", None)
 
-    # list empty again
-    response = client.get("/api/links")
+    response = client.get("/api/links?range=[0,10]")
     assert response.status_code == 200
     assert response.get_json() == []
+    assert response.headers["Content-Range"] == "links */0"
 
 
 def test_links_duplicate_short_name_returns_same_error(client):
@@ -76,6 +79,28 @@ def test_links_duplicate_short_name_returns_same_error(client):
     )
     assert response.status_code == 409
     assert response.get_json() == {"error": "short_name already exists"}
+
+
+def test_links_pagination_content_range(client):
+    for i in range(11):
+        response = client.post(
+            "/api/links",
+            json={
+                "original_url": f"https://example.com/{i}",
+                "short_name": f"n{i}",
+            },
+        )
+        assert response.status_code == 201
+
+    response = client.get("/api/links?range=[0,10]")
+    assert response.status_code == 200
+    assert len(response.get_json()) == 10
+    assert response.headers["Content-Range"] == "links 0-9/11"
+
+    response = client.get("/api/links?range=[5,10]")
+    assert response.status_code == 200
+    assert len(response.get_json()) == 5
+    assert response.headers["Content-Range"] == "links 5-9/11"
 
 
 def test_links_404(client):

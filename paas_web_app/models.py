@@ -7,7 +7,9 @@ from sqlmodel import Field, SQLModel
 
 class LinkBase(SQLModel):
     original_url: str
-    short_name: str = Field(sa_column=Column(String, unique=True, nullable=False))
+    short_name: str = Field(
+        sa_column=Column(String, unique=True, nullable=False),
+    )
 
 
 class Link(LinkBase, table=True):

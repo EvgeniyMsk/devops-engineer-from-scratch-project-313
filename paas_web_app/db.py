@@ -14,7 +14,11 @@ def create_db_engine(database_url: str):
     # Force psycopg (v3) driver for SQLAlchemy.
     # If URL doesn't specify a driver, SQLAlchemy defaults to psycopg2.
     if database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql+psycopg://", 1)
+        database_url = database_url.replace(
+            "postgres://",
+            "postgresql+psycopg://",
+            1,
+        )
     elif database_url.startswith("postgresql://"):
         database_url = database_url.replace(
             "postgresql://",
