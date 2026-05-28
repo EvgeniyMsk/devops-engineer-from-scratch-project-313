@@ -2,6 +2,11 @@ server {
     listen ${PUBLIC_PORT};
     server_name _;
 
+    # Some clients (and admin panels) can send large cookies/headers.
+    # Prevent "400 Request Header Or Cookie Too Large".
+    client_header_buffer_size 16k;
+    large_client_header_buffers 4 32k;
+
     root /app/public;
     index index.html;
 
