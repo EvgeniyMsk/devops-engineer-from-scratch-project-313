@@ -4,7 +4,10 @@
 
 ## Описание
 
-Сервис сокращения ссылок на Flask + SQLModel + PostgreSQL. При старте автоматически создаются таблицы в базе данных.
+Сервис сокращения ссылок на Flask + SQLModel + PostgreSQL.
+
+В продакшене UI раздаётся через **Nginx**, а запросы к API проксируются на бэкенд внутри контейнера.
+При старте автоматически создаются таблицы в базе данных.
 
 ## Развернутое приложение
 
@@ -26,7 +29,7 @@
 curl https://devops-engineer-from-scratch-project-313-6ccf.onrender.com/ping
 
 # Список ссылок
-curl https://devops-engineer-from-scratch-project-313-6ccf.onrender.com/api/links
+curl "https://devops-engineer-from-scratch-project-313-6ccf.onrender.com/api/links?range=[0,10]"
 
 # Создание ссылки
 curl -X POST https://devops-engineer-from-scratch-project-313-6ccf.onrender.com/api/links \
@@ -41,6 +44,7 @@ curl -X POST https://devops-engineer-from-scratch-project-313-6ccf.onrender.com/
 - [uv](https://docs.astral.sh/uv/)
 - Python 3.13+
 - PostgreSQL (или строка подключения в `DATABASE_URL`)
+- Node.js 22+ (для локального запуска UI)
 
 ### Переменные окружения
 
@@ -75,6 +79,25 @@ curl http://localhost:8080/ping
 
 ## Разработка
 
+### Установка зависимостей (CI/Hexlet)
+
+В CI используется цель `setup`, чтобы не создавать локальную виртуальную среду.
+
+```bash
+make setup
+```
+
+### Запуск UI + API вместе
+
+```bash
+make dev FRAMEWORK=flask
+```
+
+После запуска:
+
+- UI: http://localhost:5173
+- API: http://localhost:8080
+
 ### Линтер
 
 ```bash
@@ -99,4 +122,13 @@ make package-install
 ```bash
 docker build -t paas-web-app .
 docker run --rm -p 8080:8080 --env-file .env paas-web-app
+```
+
+### Docker (prod-like: Nginx + UI + API в одном контейнере)
+
+Контейнер слушает внешний порт через Nginx (внутри контейнера бэкенд работает на 8080).
+
+```bash
+docker build -t paas-web-app .
+docker run --rm -p 8080:80 --env-file .env paas-web-app
 ```
