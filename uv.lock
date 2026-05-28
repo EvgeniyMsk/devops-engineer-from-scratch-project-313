@@ -51,41 +51,6 @@ wheels = [
 ]
 
 [[package]]
-name = "devops-engineer-from-scratch-project-313"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "flask" },
-    { name = "flask-cors" },
-    { name = "psycopg", extra = ["binary"] },
-    { name = "python-dotenv" },
-    { name = "sentry-sdk" },
-    { name = "sqlmodel" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "flask", specifier = ">=3.1.3" },
-    { name = "flask-cors", specifier = ">=6.0.1" },
-    { name = "psycopg", extras = ["binary"], specifier = ">=3.2.10" },
-    { name = "python-dotenv", specifier = ">=1.1.1" },
-    { name = "sentry-sdk", specifier = ">=2.60.0" },
-    { name = "sqlmodel", specifier = ">=0.0.25" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=9.0.3" },
-    { name = "ruff", specifier = ">=0.15.14" },
-]
-
-[[package]]
 name = "flask"
 version = "3.1.3"
 source = { registry = "https://pypi.org/simple" }
@@ -160,6 +125,41 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/93/c5/3dc9475ace2c7a3680da12372cddd7f1ac874eb410a1ac48d3e9dab83782/greenlet-3.5.1-cp315-cp315t-musllinux_1_2_x86_64.whl", hash = "sha256:17d86354f0ae6b61bf9be5148d0dd34e06c3cb7c602c671f79f29ac3b150e659", size = 1678427, upload-time = "2026-05-20T13:14:43.71Z" },
     { url = "https://files.pythonhosted.org/packages/df/4e/750c15c317a41ffb36f0bf40b933e3d744a7dede61889f74443ea69690cf/greenlet-3.5.1-cp315-cp315t-win_amd64.whl", hash = "sha256:e7516cf6ae6b8a582c2770a0caed47b8a48373ed732c33d69a72913ae6ac923e", size = 245225, upload-time = "2026-05-20T13:13:59.366Z" },
     { url = "https://files.pythonhosted.org/packages/4f/fd/d3baea2eeb7b617efd47e87ca06e2ec2c6118d303aa9e918e0ce16eadc10/greenlet-3.5.1-cp315-cp315t-win_arm64.whl", hash = "sha256:5028648bf2253ec4745add746129d3904121fa7fe871a76bed23c5720573ce0a", size = 239590, upload-time = "2026-05-20T13:13:37.382Z" },
+]
+
+[[package]]
+name = "hexlet-code"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "flask" },
+    { name = "flask-cors" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "python-dotenv" },
+    { name = "sentry-sdk" },
+    { name = "sqlmodel" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "flask", specifier = ">=3.1.3" },
+    { name = "flask-cors", specifier = ">=6.0.1" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.2.10" },
+    { name = "python-dotenv", specifier = ">=1.1.1" },
+    { name = "sentry-sdk", specifier = ">=2.60.0" },
+    { name = "sqlmodel", specifier = ">=0.0.25" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=9.0.3" },
+    { name = "ruff", specifier = ">=0.15.14" },
 ]
 
 [[package]]
