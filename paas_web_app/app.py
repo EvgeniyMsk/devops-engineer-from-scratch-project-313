@@ -23,7 +23,7 @@ except ImportError:  # pragma: no cover
 
 
 def _base_url() -> str:
-    return os.getenv("BASE_URL", "http://localhost:8080").rstrip("/")
+    return os.getenv("BASE_URL", "").rstrip("/")
 
 
 def _short_url(base_url: str, short_name: str) -> str:
@@ -95,8 +95,10 @@ def _startup_app(app: Flask) -> None:
     init_db(engine)
     app.config["ENGINE"] = engine
 
-    effective_base_url = (app.config["BASE_URL"] or _base_url()).rstrip("/")
-    app.config["EFFECTIVE_BASE_URL"] = effective_base_url
+    configured_base_url = app.config["BASE_URL"] or _base_url()
+    app.config["EFFECTIVE_BASE_URL"] = (
+        configured_base_url.rstrip("/") if configured_base_url else None
+    )
     app.config["LIFESPAN_STARTED"] = True
 
 
@@ -118,9 +120,16 @@ def _get_engine(app: Flask):
 
 def _get_effective_base_url(app: Flask) -> str:
     base = app.config.get("EFFECTIVE_BASE_URL")
-    if not base:
-        raise RuntimeError("Base URL is not initialized")
-    return base
+    if base:
+        return base
+
+    forwarded_proto = request.headers.get("X-Forwarded-Proto")
+    proto = forwarded_proto or request.scheme
+
+    forwarded_host = request.headers.get("X-Forwarded-Host")
+    host = forwarded_host or request.host
+
+    return f"{proto}://{host}".rstrip("/")
 
 
 def _install_lifespan(app: Flask) -> None:
