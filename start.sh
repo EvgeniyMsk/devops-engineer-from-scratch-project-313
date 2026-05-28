@@ -1,10 +1,16 @@
 #!/usr/bin/env sh
 set -eu
 
-export PORT="${PORT:-8080}"
+PUBLIC_PORT="${PORT:-80}"
+BACKEND_PORT="8080"
 
-uv run python main.py &
+# Render expects the service to listen on $PORT.
+# We'll keep backend on 8080 and expose it via Nginx on $PUBLIC_PORT.
+PORT="${BACKEND_PORT}" uv run python main.py &
 BACKEND_PID="$!"
+
+envsubst '${PUBLIC_PORT}' < /app/nginx.conf.template \
+  > /etc/nginx/sites-enabled/default
 
 cleanup() {
   kill "$BACKEND_PID" 2>/dev/null || true

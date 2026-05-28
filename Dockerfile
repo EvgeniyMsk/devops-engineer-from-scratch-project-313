@@ -21,6 +21,7 @@ ENV PATH="/app/.venv/bin:${PATH}"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends nginx ca-certificates && \
+    rm -f /etc/nginx/sites-enabled/default && \
     rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml uv.lock ./
@@ -28,7 +29,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 COPY paas_web_app ./paas_web_app
 COPY main.py README.md ./
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf.template /app/nginx.conf.template
 COPY start.sh ./start.sh
 
 RUN chmod +x ./start.sh
