@@ -1,7 +1,10 @@
 UV ?= uv
 
 setup:
-	UV_PYTHON_DOWNLOADS=never $(UV) sync
+	UV_PYTHON_DOWNLOADS=never \
+	UV_PYTHON_PREFERENCE=only-system \
+	UV_PYTHON=python3.13 \
+	$(UV) sync
 
 install: setup
 
