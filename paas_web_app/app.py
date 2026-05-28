@@ -81,15 +81,6 @@ def _init_sentry_from_env() -> None:
 def _startup_app(app: Flask) -> None:
     _init_sentry_from_env()
 
-    if CORS is not None:
-        CORS(
-            app,
-            resources={r"/api/*": {"origins": ["http://localhost:5173"]}},
-            methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            allow_headers=["Content-Type", "Range", "Accept"],
-            expose_headers=["Content-Range", "Accept-Ranges"],
-        )
-
     db_url = app.config["DATABASE_URL"] or get_database_url()
     engine = create_db_engine(db_url)
     init_db(engine)
@@ -295,6 +286,16 @@ def create_app(*, database_url: str | None = None, base_url: str | None = None):
     load_dotenv()
 
     app = Flask(__name__)
+
+    # CORS must be configured during app setup, before the first request.
+    if CORS is not None:
+        CORS(
+            app,
+            resources={r"/api/*": {"origins": ["http://localhost:5173"]}},
+            methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            allow_headers=["Content-Type", "Range", "Accept"],
+            expose_headers=["Content-Range", "Accept-Ranges"],
+        )
 
     app.config["DATABASE_URL"] = database_url
     app.config["BASE_URL"] = base_url
