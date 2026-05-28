@@ -6,6 +6,7 @@ BACKEND_PORT="8080"
 
 # Render expects the service to listen on $PORT.
 # We'll keep backend on 8080 and expose it via Nginx on $PUBLIC_PORT.
+export PUBLIC_PORT
 PORT="${BACKEND_PORT}" uv run python main.py &
 BACKEND_PID="$!"
 
