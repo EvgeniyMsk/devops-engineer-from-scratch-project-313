@@ -20,7 +20,7 @@ ENV UV_COMPILE_BYTECODE=1 \
 ENV PATH="/app/.venv/bin:${PATH}"
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends nginx ca-certificates && \
+    apt-get install -y --no-install-recommends nginx ca-certificates gettext-base && \
     rm -f /etc/nginx/sites-enabled/default && \
     rm -rf /var/lib/apt/lists/*
 
