@@ -3,7 +3,6 @@ set -eu
 
 export PORT="${PORT:-8080}"
 
-# Start backend on 8080
 uv run python main.py &
 BACKEND_PID="$!"
 
@@ -13,6 +12,5 @@ cleanup() {
 
 trap cleanup INT TERM EXIT
 
-# Run Nginx in foreground
 nginx -g "daemon off;"
 
