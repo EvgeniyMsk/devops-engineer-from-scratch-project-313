@@ -1,12 +1,7 @@
 UV ?= uv
 
-setup:
-	UV_PYTHON_DOWNLOADS=never \
-	UV_PYTHON_PREFERENCE=only-system \
-	UV_PYTHON=python3.13 \
+install:
 	$(UV) sync
-
-install: setup
 
 FRAMEWORK ?= flask
 
