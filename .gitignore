@@ -20,6 +20,22 @@ build/
 coverage.xml
 htmlcov/
 
+# Node / frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+.yarn/
+.pnp.*
+.vite/
+
+# Local databases
+*.sqlite
+*.sqlite3
+app.db
+
 # Linters and type checkers
 .mypy_cache/
 .ruff_cache/
@@ -28,3 +44,4 @@ htmlcov/
 # IDE
 .idea/
 .vscode/
+.env

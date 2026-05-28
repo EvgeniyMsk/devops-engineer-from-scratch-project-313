@@ -1,6 +1,8 @@
 install:
 	uv sync
 
+FRAMEWORK ?= flask
+
 run:
 	uv run python main.py
 
@@ -9,6 +11,14 @@ lint:
 
 test:
 	uv run pytest
+
+dev:
+	@if [ "$(FRAMEWORK)" != "flask" ]; then \
+		echo "Unsupported FRAMEWORK=$(FRAMEWORK). Supported: flask"; \
+		exit 1; \
+	fi
+	npm install
+	npm run dev
 
 build:
 	uv build

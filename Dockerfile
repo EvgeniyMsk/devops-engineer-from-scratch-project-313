@@ -1,4 +1,15 @@
-FROM python:3.13-slim
+FROM node:22-slim AS ui
+
+WORKDIR /ui
+
+COPY package.json package-lock.json* ./
+RUN npm install --omit=dev
+
+RUN mkdir -p /ui/public && \
+    cp -r ./node_modules/@hexlet/project-devops-deploy-crud-frontend/dist/. /ui/public/
+
+
+FROM python:3.13-slim AS app
 
 WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
@@ -8,12 +19,23 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/app/.venv
 ENV PATH="/app/.venv/bin:${PATH}"
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nginx ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY paas_web_app ./paas_web_app
 COPY main.py README.md ./
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY start.sh ./start.sh
+
+RUN chmod +x ./start.sh
 
 RUN uv sync --frozen --no-dev
-EXPOSE 8080
-CMD ["uv", "run", "paas_web_app"]
+
+COPY --from=ui /ui/public ./public
+
+EXPOSE 80
+CMD ["./start.sh"]

@@ -1,0 +1,15 @@
+{
+  "name": "devops-engineer-from-scratch-project-313-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "backend": "\"%USERPROFILE%\\\\.local\\\\bin\\\\uv.exe\" run python main.py",
+    "frontend": "npm --prefix node_modules/@hexlet/project-devops-deploy-crud-frontend run preview -- --port 5173 --strictPort",
+    "dev": "concurrently -k -n backend,frontend -c blue,green \"npm run backend\" \"npm run frontend\""
+  },
+  "dependencies": {
+    "@hexlet/project-devops-deploy-crud-frontend": "^1.0.4",
+    "concurrently": "^9.2.1"
+  }
+}
+

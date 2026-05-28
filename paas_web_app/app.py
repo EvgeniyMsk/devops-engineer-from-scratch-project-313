@@ -16,6 +16,11 @@ from sqlmodel import Session, select
 from paas_web_app.db import create_db_engine, get_database_url, init_db
 from paas_web_app.models import Link, LinkCreate, LinkRead
 
+try:
+    from flask_cors import CORS
+except ImportError:  # pragma: no cover
+    CORS = None  # type: ignore[assignment]
+
 
 def _base_url() -> str:
     return os.getenv("BASE_URL", "http://localhost:8080").rstrip("/")
@@ -75,6 +80,15 @@ def _init_sentry_from_env() -> None:
 
 def _startup_app(app: Flask) -> None:
     _init_sentry_from_env()
+
+    if CORS is not None:
+        CORS(
+            app,
+            resources={r"/api/*": {"origins": ["http://localhost:5173"]}},
+            methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            allow_headers=["Content-Type", "Range", "Accept"],
+            expose_headers=["Content-Range", "Accept-Ranges"],
+        )
 
     db_url = app.config["DATABASE_URL"] or get_database_url()
     engine = create_db_engine(db_url)
@@ -153,24 +167,6 @@ def _register_links_routes(app: Flask) -> None:
     @app.post("/api/links")
     def create_link():
         return _create_link_response(app)
-        engine = _get_engine(app)
-        effective_base_url = _get_effective_base_url(app)
-        payload = request.get_json(silent=True) or {}
-        data = LinkCreate.model_validate(payload)
-
-        with Session(engine) as session:
-            link = Link(
-                original_url=data.original_url,
-                short_name=data.short_name,
-            )
-            session.add(link)
-            try:
-                session.commit()
-            except IntegrityError:
-                session.rollback()
-                return jsonify({"error": "short_name already exists"}), 409
-            session.refresh(link)
-            return jsonify(_to_read(link, effective_base_url).model_dump()), 201
 
     @app.get("/api/links/<int:link_id>")
     def get_link(link_id: int):

@@ -11,3 +11,6 @@ dist
 pytest-cache-files-*
 uv.lock.bak
 *.log
+node_modules
+npm-debug.log*
+.env
