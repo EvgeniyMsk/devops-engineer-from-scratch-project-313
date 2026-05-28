@@ -1,6 +1,12 @@
 UV ?= uv
 FRAMEWORK ?= flask
 
+setup:
+	# CI/Hexlet: install deps into system Python (no .venv on mounted FS)
+	UV_PYTHON_DOWNLOADS=never \
+	UV_PYTHON_PREFERENCE=only-system \
+	$(UV) sync --system
+
 install:
 	$(UV) sync
 
