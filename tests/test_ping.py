@@ -1,10 +1,11 @@
 import pytest
 
-from main import app
+from paas_web_app.app import create_app
 
 
 @pytest.fixture
 def client():
+    app = create_app(database_url="sqlite://", base_url="https://short.io")
     return app.test_client()
 
 
