@@ -2,6 +2,7 @@ import os
 import threading
 
 from flask import Flask, jsonify, request
+from pydantic import ValidationError
 
 try:
     from dotenv import load_dotenv
@@ -37,6 +38,25 @@ def _to_read(link: Link, base_url: str) -> LinkRead:
         short_name=link.short_name,
         short_url=_short_url(base_url, link.short_name),
     )
+
+
+def _error(detail, status_code: int):
+    return jsonify({"detail": detail}), status_code
+
+
+def _validate_link_create():
+    payload = request.get_json(silent=True)
+    if payload is None:
+        if request.data:
+            return None, _error({"error": "Invalid JSON"}, 422)
+        payload = {}
+
+    try:
+        data = LinkCreate.model_validate(payload)
+    except ValidationError as exc:
+        return None, _error(exc.errors(), 422)
+
+    return data, None
 
 
 def _parse_range_param(value: str | None) -> tuple[int, int]:
@@ -152,7 +172,7 @@ def _install_lifespan(app: Flask) -> None:
 def _register_common_routes(app: Flask) -> None:
     @app.errorhandler(404)
     def not_found(_err):
-        return jsonify({"error": "Not found"}), 404
+        return _error("Not found", 404)
 
     @app.get("/ping")
     def ping():
@@ -184,8 +204,9 @@ def _register_links_routes(app: Flask) -> None:
 def _create_link_response(app: Flask):
     engine = _get_engine(app)
     effective_base_url = _get_effective_base_url(app)
-    payload = request.get_json(silent=True) or {}
-    data = LinkCreate.model_validate(payload)
+    data, error_response = _validate_link_create()
+    if error_response is not None:
+        return error_response
 
     with Session(engine) as session:
         link = Link(
@@ -197,7 +218,7 @@ def _create_link_response(app: Flask):
             session.commit()
         except IntegrityError:
             session.rollback()
-            return jsonify({"error": "short_name already exists"}), 409
+            return _error("short_name already exists", 409)
         session.refresh(link)
         return jsonify(_to_read(link, effective_base_url).model_dump()), 201
 
@@ -208,20 +229,21 @@ def _get_link_response(app: Flask, link_id: int):
     with Session(engine) as session:
         link = session.get(Link, link_id)
         if not link:
-            return jsonify({"error": "Not found"}), 404
+            return _error("Not found", 404)
         return jsonify(_to_read(link, effective_base_url).model_dump())
 
 
 def _update_link_response(app: Flask, link_id: int):
     engine = _get_engine(app)
     effective_base_url = _get_effective_base_url(app)
-    payload = request.get_json(silent=True) or {}
-    data = LinkCreate.model_validate(payload)
+    data, error_response = _validate_link_create()
+    if error_response is not None:
+        return error_response
 
     with Session(engine) as session:
         link = session.get(Link, link_id)
         if not link:
-            return jsonify({"error": "Not found"}), 404
+            return _error("Not found", 404)
 
         link.original_url = data.original_url
         link.short_name = data.short_name
@@ -230,7 +252,7 @@ def _update_link_response(app: Flask, link_id: int):
             session.commit()
         except IntegrityError:
             session.rollback()
-            return jsonify({"error": "short_name already exists"}), 409
+            return _error("short_name already exists", 409)
         session.refresh(link)
         return jsonify(_to_read(link, effective_base_url).model_dump())
 
@@ -240,7 +262,7 @@ def _delete_link_response(app: Flask, link_id: int):
     with Session(engine) as session:
         link = session.get(Link, link_id)
         if not link:
-            return jsonify({"error": "Not found"}), 404
+            return _error("Not found", 404)
         session.delete(link)
         session.commit()
         return ("", 204)

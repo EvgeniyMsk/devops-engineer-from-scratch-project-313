@@ -66,6 +66,16 @@ def test_links_crud_flow(client):
     assert response.headers["Content-Range"] == "links */0"
 
 
+def test_links_validation_errors(client):
+    response = client.post("/api/links", json={})
+    assert response.status_code == 422
+    assert "detail" in response.get_json()
+
+    response = client.put("/api/links/1", data="not-json")
+    assert response.status_code == 422
+    assert "detail" in response.get_json()
+
+
 def test_links_duplicate_short_name_returns_same_error(client):
     response = client.post(
         "/api/links",
@@ -78,7 +88,7 @@ def test_links_duplicate_short_name_returns_same_error(client):
         json={"original_url": "https://example.com/2", "short_name": "dup"},
     )
     assert response.status_code == 409
-    assert response.get_json() == {"error": "short_name already exists"}
+    assert response.get_json() == {"detail": "short_name already exists"}
 
 
 def test_links_pagination_content_range(client):
@@ -106,16 +116,16 @@ def test_links_pagination_content_range(client):
 def test_links_404(client):
     response = client.get("/api/links/99999")
     assert response.status_code == 404
-    assert response.get_json() == {"error": "Not found"}
+    assert response.get_json() == {"detail": "Not found"}
 
     response = client.put(
         "/api/links/99999",
         json={"original_url": "https://example.com", "short_name": "x"},
     )
     assert response.status_code == 404
-    assert response.get_json() == {"error": "Not found"}
+    assert response.get_json() == {"detail": "Not found"}
 
     response = client.delete("/api/links/99999")
     assert response.status_code == 404
-    assert response.get_json() == {"error": "Not found"}
+    assert response.get_json() == {"detail": "Not found"}
 
