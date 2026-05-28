@@ -2,6 +2,10 @@
 [![Actions Status](https://github.com/EvgeniyMsk/devops-engineer-from-scratch-project-313/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/EvgeniyMsk/devops-engineer-from-scratch-project-313/actions)
 [![CI](https://github.com/EvgeniyMsk/devops-engineer-from-scratch-project-313/actions/workflows/ci.yml/badge.svg)](https://github.com/EvgeniyMsk/devops-engineer-from-scratch-project-313/actions/workflows/ci.yml)
 
+## Развернутое приложение
+
+- **Ping endpoint**: `https://devops-engineer-from-scratch-project-313-6ccf.onrender.com/ping`
+
 ## Запуск приложения
 
 ### Требования
@@ -30,6 +34,12 @@ curl http://localhost:8080/ping
 ```
 
 Ожидаемый ответ: `pong`
+
+Проверка развернутого приложения:
+
+```bash
+curl https://devops-engineer-from-scratch-project-313-6ccf.onrender.com/ping
+```
 
 ## Разработка
 
