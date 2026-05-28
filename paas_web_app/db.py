@@ -11,8 +11,16 @@ def get_database_url() -> str:
 
 
 def create_db_engine(database_url: str):
-    if database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    # Force psycopg (v3) driver for SQLAlchemy.
+    # If URL doesn't specify a driver, SQLAlchemy defaults to psycopg2.
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql+psycopg://", 1)
+    elif database_url.startswith("postgresql://"):
+        database_url = database_url.replace(
+            "postgresql://",
+            "postgresql+psycopg://",
+            1,
+        )
 
     connect_args = None
     if database_url.startswith("sqlite:"):
